@@ -1,6 +1,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
+const multer = require('multer');
 
 const routerUsers = new express.Router();
 const optsUpdate = { new: true, runValidators: true };
@@ -83,6 +84,27 @@ routerUsers.patch('/users/me', auth, async (req, res) => {
 routerUsers.delete('/users/me', auth, async (req, res) => {
     await req.user.remove().catch((err) => res.status(500).send(err));
     res.send(req.user);
+});
+
+// upload options
+const upload = multer({
+    dest: 'avatars',
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter(req, filename, callback) {
+        // filter filename extensions
+        if (!/\.(jpg|jpeg|png)$/.test(filename.originalname.toLowerCase())) {
+            callback(new Error('file must be a jpg|jpeg|png'));
+        }
+        
+        callback(null, true);
+    }
+});
+
+// user avatar upload
+routerUsers.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+    res.send()
 });
 
 module.exports = routerUsers;
