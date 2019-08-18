@@ -12,7 +12,6 @@ routerTasks.get('/tasks', auth, async (req, res) => {
 
     // retrieve via populating user tasks
     const match = req.query.isCompleted ? { isCompleted: (req.query.isCompleted === 'true') } : {};
-    console.log(match);
 
     await req.user.populate({ path: 'tasks', match }).execPopulate().catch((err) => res.status(500).send());
     res.send(req.user.tasks);
