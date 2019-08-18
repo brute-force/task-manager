@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-// const jwt = require('jsonwebtoken');
 const utilsJWT = require('../utils/jwt');
 
 const signOpts = {
@@ -54,6 +53,9 @@ const schemaUser = new mongoose.Schema({
     ]
 });
 
+// virtual property for tasks
+schemaUser.virtual('tasks', { ref: 'Task', localField: '_id', foreignField: 'owner' });
+
 // hash password before save
 schemaUser.pre('save', async function (next) {
     if (this.isModified('password')) {
@@ -95,14 +97,6 @@ schemaUser.methods.generateAuthToken = async function() {
     } catch (err) {
         throw err;
     }
-    // const token = jwt.sign({ _id: this._id },  utilsJWT.keyPrivate, signOpts);
-
-    // // add token to user
-    // this.tokens.push({ token });
-    // await this.save()
-    //     .then((userSaved) => console.log(JSON.stringify(userSaved, null, 4)))
-    //     .catch((err) => console.log(`error saving user: ${err.message}`));
-
 };
 
 // get public profile for user
