@@ -16,6 +16,28 @@ routerUsers.post('/users/login', async (req, res) => {
     }
 });
 
+// log out user
+routerUsers.get('/users/logout', auth, async (req, res) => {
+    try {
+        req.user.tokens = req.user.tokens.filter((token) => token.token !== req.token);
+        await req.user.save();
+        res.send();
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// log out user (all sessions)
+routerUsers.get('/users/logout/all', auth, async (req, res) => {
+    try {
+        req.user.tokens = [];
+        await req.user.save();
+        res.send();
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
 // get user me
 routerUsers.get('/users/me', auth, async (req, res) => {
     res.send(req.user);
@@ -24,7 +46,7 @@ routerUsers.get('/users/me', auth, async (req, res) => {
 });
 
 // get user by id
-routerUsers.get('/users/:id', async (req, res) => {
+routerUsers.get('/users/:id', auth, async (req, res) => {
     const user = await User.findById(req.params.id).catch((err) => res.status(500).send());
     user ? res.send(user) : res.status(404).send();
 });
