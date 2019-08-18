@@ -52,6 +52,8 @@ const schemaUser = new mongoose.Schema({
             }
         }
     ]
+}, {
+    timestamps: true
 });
 
 // virtual property for tasks
