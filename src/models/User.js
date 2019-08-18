@@ -84,6 +84,7 @@ schemaUser.statics.findByCredentials = async (email, password) => {
     return user;
 };
 
+// use jwt to sign this login and return a token
 schemaUser.methods.generateAuthToken = async function() {
     try {
         const token = utilsJWT.sign(this._id);
@@ -102,6 +103,17 @@ schemaUser.methods.generateAuthToken = async function() {
     //     .then((userSaved) => console.log(JSON.stringify(userSaved, null, 4)))
     //     .catch((err) => console.log(`error saving user: ${err.message}`));
 
+};
+
+// get public profile for user
+schemaUser.methods.getPublicProfile = function() {
+    let obj = this.toObject();
+    delete obj.password;
+    delete obj.tokens;
+
+    console.log(obj);
+
+    return obj;
 };
 
 const User = mongoose.model('User', schemaUser);
