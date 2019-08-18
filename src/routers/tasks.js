@@ -6,6 +6,11 @@ const routerTasks = new express.Router();
 const optsUpdate = { new: true, runValidators: true };
 
 // get tasks
+// params: 
+// -isCompleted true/false
+// -limit int
+// -skip int
+// -sortBy field:asc/desc
 routerTasks.get('/tasks', auth, async (req, res) => {
     // retrieve via search by owner
     // const tasks = await Task.find({ owner: req.user._id }).catch((err) => res.status(500).send());
@@ -13,7 +18,20 @@ routerTasks.get('/tasks', auth, async (req, res) => {
     // retrieve via populating user tasks
     const match = req.query.isCompleted ? { isCompleted: (req.query.isCompleted === 'true') } : {};
 
-    await req.user.populate({ path: 'tasks', match, options: { limit: parseInt(req.query.limit), skip: parseInt(req.query.skip) } }).execPopulate().catch((err) => res.status(500).send());
+    // query options
+    const options = { 
+        limit: parseInt(req.query.limit), 
+        skip: parseInt(req.query.skip),
+        sort: {}
+    };
+
+    // parse sort
+    if (req.query.sortBy) {
+        const sortComponents = req.query.sortBy.split(':');
+        options.sort[sortComponents[0]] = (sortComponents[1].toLowerCase() === 'desc') ? -1 : 1
+    }
+
+    await req.user.populate({ path: 'tasks', match, options }).execPopulate().catch((err) => res.status(500).send());
     res.send(req.user.tasks);
 });
 
