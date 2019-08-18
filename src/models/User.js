@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const utilsJWT = require('../utils/jwt');
+const Task = require('./Task');
 
 const signOpts = {
     expiresIn: '10 seconds',
@@ -62,6 +63,12 @@ schemaUser.pre('save', async function (next) {
         this.password = await bcrypt.hash(this.password, 10);
     }
 
+    next();
+});
+
+// delete tasks before remove
+schemaUser.pre('remove', async function (next) {
+    await Task.deleteMany({ owner: this._id });
     next();
 });
 
