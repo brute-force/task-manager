@@ -40,9 +40,7 @@ routerUsers.get('/users/logout/all', auth, async (req, res) => {
 
 // get user me
 routerUsers.get('/users/me', auth, async (req, res) => {
-    res.send(req.user);
-    // const users = await User.find({}).catch((err) => res.status(500).send());
-    // res.send(users);
+    res.send({ user: req.user.getPublicProfile(), token: req.token });
 });
 
 // get user by id
@@ -58,46 +56,33 @@ routerUsers.post('/users', async (req, res) => {
     try {
         await user.save();
         const token = await user.generateAuthToken();
-        res.status(201).send({ user, token })
+        res.status(201).send({ user: user.getPublicProfile(), token })
     } catch (err) {
         res.status(400).send(`error saving user: ${err.message}`);
     }
-
-    // const token = await user.generateAuthToken();
-
-    // await user.save()
-    //     .then((userSaved) => res.status(201).send(userSaved))
-    //     .catch((err) => res.status(400).send(`error saving user: ${err.message}`));
 });
 
 // update user
-routerUsers.patch('/users/:id', async (req, res) => {
+routerUsers.patch('/users/me', auth, async (req, res) => {
     const updates = Object.keys(req.body);
     const updateAllowables = ['name', 'email', 'password', 'age'];
     const doUpdate = updates.every((update) => updateAllowables.includes(update));
 
     if (doUpdate) {
-        // do findById()/update/save() instead of findByIdAndUpdate() so pre hook on user model fires
-        const user = await User.findById(req.params.id).catch((err) => res.status(500).send());
-        updates.forEach((update) => user[update] = req.body[update]);
+        updates.forEach((update) => req.user[update] = req.body[update]);
 
-        await user.save()
-            .then((userSaved) => res.send(userSaved))
+        await req.user.save()
+            .then((userSaved) => res.send(userSaved.getPublicProfile()))
             .catch((err) => res.status(400).send(`error updating user: ${err.message}`));
-
-        // const user = await User.findByIdAndUpdate(req.params.id, req.body, optsUpdate)
-        //     .catch((err) => res.status(400).send(err));
-        // user ? res.send(user) : res.status(404).send();
     } else {
         res.status(400).send('invalid user update');
     }
 });
 
-// delete user
-routerUsers.delete('/users/:id', async (req, res) => {
-    const user = await User.findByIdAndDelete(req.params.id)
-        .catch((err) => res.status(500).send(err));
-    user ? res.send(user) : res.status(404).send();
+// delete yoself
+routerUsers.delete('/users/me', auth, async (req, res) => {
+    await req.user.remove().catch((err) => res.status(500).send(err));
+    res.send(req.user);
 });
 
 module.exports = routerUsers;
