@@ -6,14 +6,15 @@ const routerTasks = new express.Router();
 const optsUpdate = { new: true, runValidators: true };
 
 // get tasks
-routerTasks.get('/tasks', async (req, res) => {
-    const tasks = await Task.find({}).catch((err) => res.status(500).send());
-    res.send(tasks);
+routerTasks.get('/tasks', auth, async (req, res) => {
+    // const tasks = await Task.find({ owner: req.user._id }).catch((err) => res.status(500).send());
+    await req.user.populate('tasks').execPopulate().catch((err) => res.status(500).send());
+    res.send(req.user.tasks);
 });
 
 // get task by id
-routerTasks.get('/tasks/:id', async (req, res) => {
-    const task = await Task.findById(req.params.id).catch((err) => res.status(500).send());
+routerTasks.get('/tasks/:id', auth, async (req, res) => {
+    const task = await Task.findOne({ _id: req.params.id, owner: req.user._id }).catch((err) => res.status(500).send());
     task ? res.send(task) : res.status(404).send();
 });
 
@@ -26,31 +27,31 @@ routerTasks.post('/tasks', auth, async (req, res) => {
 });
 
 // update task
-routerTasks.patch('/tasks/:id', async (req, res) => {
+routerTasks.patch('/tasks/:id', auth, async (req, res) => {
     const updates = Object.keys(req.body);
     const updateAllowables = ['description', 'isCompleted'];
     const doUpdate = updates.every((update) => updateAllowables.includes(update));
 
     if (doUpdate) {
-        const task = await Task.findById(req.params.id).catch((err) => res.status(500).send());
+        const task = await Task.findOne({ _id: req.params.id, owner: req.user._id }).catch((err) => res.status(500).send());
+
+        if (!task) {
+            return res.status(404).send();
+        }
+        
         updates.forEach((update) => task[update] = req.body[update]);
 
         await task.save()
             .then((taskSaved) => res.send(taskSaved))
             .catch((err) => res.status(400).send(`error updating task: ${err.message}`));
-
-        // const task = await Task.findByIdAndUpdate(req.params.id, req.body, optsUpdate)
-        //     .catch((err) => res.status(400).send(err));
-
-        // task ? res.send(task) : res.status(404).send();
     } else {
         res.status(400).send('invalid task update');
     }
 });
 
 // delete task
-routerTasks.delete('/tasks/:id', async (req, res) => {
-    const task = await Task.findByIdAndDelete(req.params.id)
+routerTasks.delete('/tasks/:id', auth, async (req, res) => {
+    const task = await Task.findOneAndDelete({ _id: req.params.id, owner: req.user._id })
         .catch((err) => res.status(500).send(err));
     task ? res.send(task) : res.status(404).send();
 });
