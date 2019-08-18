@@ -7,8 +7,14 @@ const optsUpdate = { new: true, runValidators: true };
 
 // get tasks
 routerTasks.get('/tasks', auth, async (req, res) => {
+    // retrieve via search by owner
     // const tasks = await Task.find({ owner: req.user._id }).catch((err) => res.status(500).send());
-    await req.user.populate('tasks').execPopulate().catch((err) => res.status(500).send());
+
+    // retrieve via populating user tasks
+    const match = req.query.isCompleted ? { isCompleted: (req.query.isCompleted === 'true') } : {};
+    console.log(match);
+
+    await req.user.populate({ path: 'tasks', match }).execPopulate().catch((err) => res.status(500).send());
     res.send(req.user.tasks);
 });
 
