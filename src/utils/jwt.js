@@ -7,7 +7,7 @@ const keyPrivate  = fs.readFileSync(path.join(__dirname, '../private.key'));
 const keyPublic  = fs.readFileSync(path.join(__dirname, '../public.key'));
 
 const signOpts = {
-    expiresIn: '600 seconds',
+    expiresIn: '1 hour',
     algorithm: 'RS256'
 };
 
