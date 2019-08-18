@@ -82,13 +82,11 @@ schemaUser.statics.findByCredentials = async (email, password) => {
         });
 
     if (!user) {
-        console.log('not found');
         throw new Error('login error');
     }
     const isFound = await bcrypt.compare(password, user.password);
 
     if (!isFound) {
-        console.log('password invalid');
         throw new Error('login error');
     }
 
@@ -113,8 +111,6 @@ schemaUser.methods.getPublicProfile = function() {
     let obj = this.toObject();
     delete obj.password;
     delete obj.tokens;
-
-    console.log(obj);
 
     return obj;
 };
