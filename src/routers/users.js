@@ -95,7 +95,7 @@ const upload = multer({
     fileFilter(req, filename, callback) {
         // filter filename extensions
         if (!/\.(jpg|jpeg|png)$/.test(filename.originalname.toLowerCase())) {
-            callback(new Error('file must be a jpg|jpeg|png'));
+            return callback(new Error('file must be a jpg|jpeg|png'));
         }
         
         callback(null, true);
@@ -104,7 +104,9 @@ const upload = multer({
 
 // user avatar upload
 routerUsers.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
-    res.send()
+    res.send();
+}, (err, req, res, next) => {
+    res.status(400).send({ error: err.message })
 });
 
 module.exports = routerUsers;
