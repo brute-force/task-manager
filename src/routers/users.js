@@ -88,7 +88,7 @@ routerUsers.delete('/users/me', auth, async (req, res) => {
 
 // upload options
 const upload = multer({
-    dest: 'avatars',
+    // dest: 'avatars',
     limits: {
         fileSize: 1000000
     },
@@ -103,8 +103,21 @@ const upload = multer({
 });
 
 // user avatar upload
-routerUsers.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+routerUsers.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+    req.user.avatar = req.file.buffer;
+
+    await req.user.save();
     res.send();
+}, (err, req, res, next) => {
+    res.status(400).send({ error: err.message })
+});
+
+// user avatar delete
+routerUsers.delete('/users/me/avatar', auth, async (req, res) => {
+    req.user.avatar = undefined;
+
+    await req.user.save()
+    .then((userSaved) => res.send(userSaved.getPublicProfile()))
 }, (err, req, res, next) => {
     res.status(400).send({ error: err.message })
 });
