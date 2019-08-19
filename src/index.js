@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(routerUsers);
 app.use(routerTasks);
 
-const port = process.env.PORT_TASK_MANAGER || 3000;
+const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
     console.log(`server up on ${port}`);
