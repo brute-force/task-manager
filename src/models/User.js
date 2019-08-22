@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const utilsJWT = require('../utils/jwt');
-const Task = require('./Task');
+const getModel = require('../db/mongoose');
+const Task  = require('./Task');
 
 const signOpts = {
     expiresIn: '10 seconds',
@@ -119,6 +120,6 @@ schemaUser.methods.getPublicProfile = function() {
     return obj;
 };
 
-const User = mongoose.model('User', schemaUser);
+const User = getModel('User', schemaUser);
 
 module.exports = User;

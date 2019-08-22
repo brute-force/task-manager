@@ -24,3 +24,11 @@ const mongoose = require('mongoose');
         console.log(`error connecting: ${err.message}`);
     }
 })();
+
+const getModel = (modelName, schema) => {
+    return mongoose.modelNames().indexOf(modelName) !== -1 
+        ? mongoose.connection.model(modelName) 
+        : mongoose.model(modelName, schema);
+};
+
+module.exports = getModel;
