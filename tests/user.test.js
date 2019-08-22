@@ -5,14 +5,14 @@ const { init, me } = require('./fixtures/db')
 var expect = require('chai').expect;
 const sinon = require('sinon');
 
-let send;
-
 before(() => {
-    send = sinon.stub(require('@sendgrid/mail'), 'send').callsFake(() => console.log('@sendgrid/mail send() faked'));
+    // don't send emails after create/delete
+    const fake = sinon.fake();
+    sinon.replace(require('@sendgrid/mail'), 'send', fake);
 });
 
 after(() => {
-    send.restore();
+    sinon.restore();
 });
 
 beforeEach(init);
