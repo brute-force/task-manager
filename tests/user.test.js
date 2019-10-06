@@ -1,128 +1,136 @@
 const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/models/User');
-const { init, me } = require('./fixtures/db')
+const { init, me } = require('./fixtures/db');
 var expect = require('chai').expect;
 const sinon = require('sinon');
 
-before(() => {
+describe('user tests', function () {
+  before(function () {
     // don't send emails after create/delete
     const fake = sinon.fake();
     sinon.replace(require('@sendgrid/mail'), 'send', fake);
-});
+  });
 
-after(() => {
+  after(function () {
     sinon.restore();
-});
+  });
+  beforeEach(init);
 
-beforeEach(init);
+  it('create user', async function () {
+    const obj = {
+      name: 'milo',
+      email: 'milo@yahoo.com',
+      role: 'usenet downloader',
+      password: 'yeshello!!!'
+    };
 
-describe('user tests', () => {
+    const response = await request(app)
+      .post('/users')
+      .send(obj);
 
-    it('create user', async () => {
-        const obj = {
-            name: 'milo',
-            email: 'milo@yahoo.com',
-            password: 'yeshello!!!'
-        };
+    expect(response.statusCode).to.equal(201);
 
-        const response = await request(app)
-            .post('/users')
-            .send(obj);
+    const user = await User.findById(response.body.user._id);
+    expect(user).not.to.be.null;
 
-        expect(response.statusCode).to.equal(201);
+    const { password, ...userCreated } = obj;
 
-        const user = await User.findById(response.body.user._id)
-        expect(user).not.to.be.null;
+    expect(response.body.user).to.include(userCreated);
+  });
 
-        const {password, ...userCreated} = obj;
+  it('log in user', async function () {
+    const response = await request(app)
+      .post('/users/login')
+      .send((({ email, password }) => ({ email, password }))(me));
 
-        expect(response.body.user).to.include(userCreated);
-    });
+    expect(response.statusCode).to.equal(200);
 
-    it('log in user', async () => {
-        const response = await request(app)
-            .post('/users/login')
-            .send((({ email, password }) => ({ email, password }))(me));
+    const user = await User.findById(response.body.user._id);
+    expect(response.body.token).to.equal(user.tokens[1].token);
+  });
 
-        expect(response.statusCode).to.equal(200);
+  it('log in user (unauthorized)', async function () {
+    const response = await request(app)
+      .post('/users/login')
+      .send({ email: 'foo@bar.com', password: 'password' });
 
-        const user = await User.findById(response.body.user._id);
-        expect(response.body.token).to.equal(user.tokens[1].token);
-    });
+    expect(response.statusCode).to.equal(400);
+  });
 
-    it('log in user (unauthorized)', async () => {
-        const response = await request(app)
-            .post('/users/login')
-            .send({ email: 'foo@bar.com', password: 'password' });
+  it('get user', async function () {
+    const response = await request(app)
+      .get('/users/me')
+      .set('Authorization', `Bearer ${me.tokens[0].token}`);
 
-        expect(response.statusCode).to.equal(400);
-    });
+    expect(response.statusCode).to.equal(200);
+  });
 
-    it('get user', async () => {
-        const response = await request(app)
-            .get('/users/me')
-            .set('Authorization', `Bearer ${me.tokens[0].token}`);
+  it('get all users', async function () {
+    const response = await request(app)
+      .get('/users/all')
+      .set('Authorization', `Bearer ${me.tokens[0].token}`);
 
-        expect(response.statusCode).to.equal(200);
-    });
+    expect(response.statusCode).to.equal(200);
+    expect(response.body.length).to.equal(2);
+  });
 
-    it('get user (unauthorized)', async () => {
-        const response = await request(app)
-            .get('/users/me');
+  it('get user (unauthorized)', async function () {
+    const response = await request(app)
+      .get('/users/me');
 
-        expect(response.statusCode).to.equal(401);
-    });
+    expect(response.statusCode).to.equal(401);
+  });
 
-    it('delete user', async () => {
-        const response = await request(app)
-            .delete('/users/me')
-            .set('Authorization', `Bearer ${me.tokens[0].token}`);
+  it('delete user', async function () {
+    const response = await request(app)
+      .delete('/users/me')
+      .set('Authorization', `Bearer ${me.tokens[0].token}`);
 
-        expect(response.statusCode).to.equal(200);
+    expect(response.statusCode).to.equal(200);
 
-        const user = await User.findById(me._id);
-        expect(user).to.be.null;
-    });
+    const user = await User.findById(me._id);
+    expect(user).to.be.null;
+  });
 
-    it('delete user (unauthorized)', async () => {
-        const response = await request(app)
-            .delete('/users/me');
+  it('delete user (unauthorized)', async function () {
+    const response = await request(app)
+      .delete('/users/me');
 
-        expect(response.statusCode).to.equal(401);
-    });
+    expect(response.statusCode).to.equal(401);
+  });
 
-    it('upload avatar', async () => {
-        const response = await request(app)
-            .post('/users/me/avatar')
-            .set('Authorization', `Bearer ${me.tokens[0].token}`)
-            .attach('avatar', 'tests/fixtures/gingerbread-man.jpg');
+  it('upload avatar', async function () {
+    const response = await request(app)
+      .post('/users/me/avatar')
+      .set('Authorization', `Bearer ${me.tokens[0].token}`)
+      .attach('avatar', 'tests/fixtures/gingerbread-man.jpg');
 
-        expect(response.statusCode).to.equal(200);
+    expect(response.statusCode).to.equal(200);
 
-        const user = await User.findById(me._id);
-        expect(user.avatar).to.be.instanceof(Buffer);
-    });
+    const user = await User.findById(me._id);
+    expect(user.avatar).to.be.instanceof(Buffer);
+  });
 
-    it('update user', async () => {
-        const nameNew = 'Reuel Alvarez';
+  it('update user', async function () {
+    const nameNew = 'Reuel Alvarez';
 
-        const response = await request(app)
-            .patch('/users/me')
-            .set('Authorization', `Bearer ${me.tokens[0].token}`)
-            .send({ name: nameNew })
-            .expect(200);
+    await request(app)
+      .patch('/users/me')
+      .set('Authorization', `Bearer ${me.tokens[0].token}`)
+      .send({ name: nameNew })
+      .expect(200);
 
-        const user = await User.findById(me._id);
-        expect(user.name).to.equal(nameNew);
-    });
+    const user = await User.findById(me._id);
+    expect(user.name).to.equal(nameNew);
+  });
 
-    it('update user (invalid field)', async () => {
-        const response = await request(app)
-            .patch('/users/me')
-            .set('Authorization', `Bearer ${me.tokens[0].token}`)
-            .send({ location: 'New York' });
+  it('update user (invalid field)', async function () {
+    const response = await request(app)
+      .patch('/users/me')
+      .set('Authorization', `Bearer ${me.tokens[0].token}`)
+      .send({ location: 'New York' });
 
-        expect(response.statusCode).to.equal(400);
-    });
+    expect(response.statusCode).to.equal(400);
+  });
 });
