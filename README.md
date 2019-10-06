@@ -21,6 +21,10 @@ GET /users/logout/all
 ```shell
 GET /users/me
 ```
+#### Get all user profiles
+```shell
+GET /users/all
+```
 #### Get user by id
 ```shell
 GET /users/:id
@@ -51,6 +55,10 @@ GET /users/:id/avatar
 #### Get task by id
 ```shell
 GET /tasks/:id
+```
+#### Get all tasks
+```shell
+GET /tasks/all
 ```
 #### Create task
 ```shell
