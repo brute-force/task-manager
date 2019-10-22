@@ -13,7 +13,7 @@ const schemaUser = new mongoose.Schema({
   },
   role: {
     type: String,
-    required: true,
+    default: 'staff',
     trim: true
   },
   email: {
