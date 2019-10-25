@@ -143,10 +143,10 @@ routerUsers.post('/users/me/avatar', auth, upload.single('avatar'), async (req, 
   res.status(400).send({ error: err.message });
 });
 
-// user avatar lookup by id
-routerUsers.get('/users/:id/avatar', async (req, res) => {
+// user avatar lookup
+routerUsers.get('/users/:id/avatar', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id === 'me' ? req.user._id : req.params.id);
 
     if (!user || !user.avatar) {
       throw new Error('user or user avatar not found');
