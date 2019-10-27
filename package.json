@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
-    "test": "env-cmd -f ./config/test.env mocha tests/*.js --watch --sort"
+    "test": "env-cmd -f ./config/test.env mocha tests/*.js --watch --sort",
+    "test-prod": "mocha tests/*.js --sort"
   },
   "jest": {
     "testEnvironment": "node"
