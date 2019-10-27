@@ -1,0 +1,25 @@
+language: node_js
+node_js:
+  - 10.16.3
+dist: trusty
+# env:
+#   -
+cache:
+  directories:
+    - node_modules
+install:
+  - rm -rf node_modules
+  - npm i --production
+# script:
+#   - cd ~/Dropbox/computer/git/vuetify-todo
+#   - npm run build
+#   - cp -rXv dist ~/Dropbox/computer/git/udemy/node/task-manager/
+#   - cd -
+deploy:
+  provider: elasticbeanstalk
+  access_key_id: $ACCESS_KEY_ID
+  secret_access_key: $SECRET_ACCESS_KEY
+  region: us-east-1
+  app: task
+  env: task-t2micro-alb
+  bucket_name: travis-ci-code
