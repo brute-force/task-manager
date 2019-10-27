@@ -9,7 +9,7 @@ cache:
     - node_modules
 install:
   - rm -rf node_modules
-  - npm i --production
+  - npm i
 script:
   - npm run test-prod
 #   - cd ~/Dropbox/computer/git/vuetify-todo
