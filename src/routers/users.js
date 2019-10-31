@@ -4,6 +4,13 @@ const User = require('../models/User');
 const multer = require('multer');
 const sharp = require('sharp');
 const { sendEmailWelcome, sendEmailCancellation } = require('../emails/account');
+const uuidv1 = require('uuid/v1');
+const S3 = require('aws-sdk/clients/s3');
+const s3 = new S3({
+  region: 'us-east-1',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
 
 const routerUsers = new express.Router();
 // const optsUpdate = { new: true, runValidators: true };
@@ -60,6 +67,25 @@ routerUsers.get('/users/all', auth, async (req, res) => {
   }
 });
 
+// get avatar upload s3 signed url
+routerUsers.post('/users/upload', auth, async (req, res) => {
+  const key = `${process.env.AWS_S3_AVATAR_BUCKET_FOLDER}/${req.user._id}/${uuidv1()}.jpeg`;
+
+  var params = {
+    Bucket: process.env.AWS_S3_AVATAR_BUCKET,
+    ContentType: req.body['Content-Type'],
+    Key: key
+  };
+
+  await s3.getSignedUrl('putObject', params, (err, url) => {
+    if (err) {
+      return res.send({ error: err.message });
+    }
+
+    res.send({ key, url });
+  });
+});
+
 // get user by id
 routerUsers.get('/users/:id', auth, async (req, res) => {
   const user = await User.findById(req.params.id).catch((err) => {
@@ -91,7 +117,7 @@ routerUsers.post('/users', async (req, res) => {
 // update user
 routerUsers.patch('/users/me', auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const updateAllowables = ['name', 'email', 'password', 'age'];
+  const updateAllowables = ['name', 'email', 'password', 'age', 'avatarPath'];
   const doUpdate = updates.every((update) => updateAllowables.includes(update));
 
   if (doUpdate) {

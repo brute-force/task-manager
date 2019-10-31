@@ -53,6 +53,9 @@ const schemaUser = new mongoose.Schema({
       }
     }
   ],
+  avatarPath: {
+    type: String
+  },
   avatar: {
     type: Buffer
   }
