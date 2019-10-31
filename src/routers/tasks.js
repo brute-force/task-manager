@@ -40,7 +40,7 @@ routerTasks.get('/tasks', auth, async (req, res) => {
 
 // get all tasks
 routerTasks.get('/tasks/all', auth, async (req, res) => {
-  const tasks = await Task.find({ }).populate('owner', 'name email').exec().catch((err) => {
+  const tasks = await Task.find({ }).populate('owner', 'name email avatarPath').exec().catch((err) => {
     console.log(err);
     res.status(500).send();
   });
